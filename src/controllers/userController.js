@@ -35,7 +35,7 @@ const UserController = {
   },
 
   addUser: async (req, res) => {
-    const { username, password, email, fullName, membership } = req.body;
+    const { username, password, email, full_name, membership } = req.body;
 
     try {
       // Check if the username is already taken
@@ -59,7 +59,7 @@ const UserController = {
         username,
         password: hashedPassword,
         email,
-        fullName,
+        full_name,
         membership,
       };
 
@@ -72,7 +72,7 @@ const UserController = {
       res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
       logger.error(`ADD USER: Error occurred - ${error}`);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(400).json({ error: error.message }); // Return 400 error with the error message
     }
   },
 
@@ -87,7 +87,7 @@ const UserController = {
 
       const updatedUser = await User.update(userId, userData);
       if (updatedUser) {
-        logger.info(`Updated user with ID: ${updatedUser.userId}`);
+        logger.info(`Updated user with ID: ${updatedUser.user_id}`);
         res.json(updatedUser);
       } else {
         logger.info(`SENT: 404 Not Found: ${req.originalUrl}`);
@@ -95,9 +95,7 @@ const UserController = {
       }
     } catch (error) {
       logger.error(`Error updating user: ${error}`);
-      res
-        .status(500)
-        .json({ error: "An error occurred while updating the user." });
+      res.status(400).json({ error: error.message }); // Return 400 error with the error message
     }
   },
 
@@ -106,7 +104,7 @@ const UserController = {
     try {
       const deletedUser = await User.delete(userId);
       if (deletedUser) {
-        logger.info(`Deleted user with ID: ${deletedUser.userId}`);
+        logger.info(`Deleted user with ID: ${deletedUser.user_id}`);
         res.json(deletedUser);
       } else {
         logger.info(`SENT: 404 Not Found: ${req.originalUrl}`);
@@ -144,7 +142,8 @@ const UserController = {
       const token = User.generateToken(
         user.user_id,
         user.username,
-        user.is_admin
+        user.is_admin,
+        user.membership
       );
 
       logger.info(`LOGIN: User logged in - username: ${username}`);

@@ -32,6 +32,12 @@ pool
 
 const userRouter = require("./routes/userRoutes");
 app.use(userRouter);
+const categoryRouter = require("./routes/categoryRoutes");
+app.use(categoryRouter);
+const postRouter = require("./routes/postRoutes");
+app.use(postRouter);
+const paymentRouter = require("./routes/paymentRoutes");
+app.use(paymentRouter);
 
 // Catch all requests not sent to the attached routes and send 404 response
 app.use(function (req, res, next) {

@@ -1,10 +1,9 @@
 const pool = require("../services/db");
-const { validateUser } = require("../services/validators/userValidator");
+const { validateUser } = require("../services/validators/userValidation");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 class User {
-
   static async getAll() {
     const query = "SELECT * FROM users";
     const { rows } = await pool.query(query);
@@ -23,16 +22,17 @@ class User {
       throw new Error(error.details[0].message);
     }
 
-    const { username, password, email, fullName, membership, isAdmin } = value;
+    const { username, password, email, full_name, membership, is_admin } =
+      value;
     const query =
       "INSERT INTO users (username, password, email, full_name, membership, created_at, updated_at, is_admin) VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6) RETURNING *";
     const { rows } = await pool.query(query, [
       username,
       password,
       email,
-      fullName,
+      full_name,
       membership,
-      isAdmin,
+      is_admin,
     ]);
     return rows[0];
   }
@@ -43,7 +43,8 @@ class User {
       throw new Error(error.details[0].message);
     }
 
-    const { username, password, email, fullName, membership, isAdmin } = value;
+    const { username, password, email, full_name, membership, is_admin } =
+      value;
     const queryParts = [];
     const queryParams = [userId];
     let paramIndex = 2;
@@ -76,20 +77,22 @@ class User {
       paramIndex++;
     }
 
-    if (fullName) {
+    if (full_name) {
       queryParts.push(`full_name = $${paramIndex}`);
-      queryParams.push(fullName);
+      queryParams.push(full_name);
       paramIndex++;
     }
 
     if (membership) {
       queryParts.push(`membership = $${paramIndex}`);
       queryParams.push(membership);
+      paramIndex++;
     }
 
-    if (isAdmin) {
+    if (typeof is_admin !== "undefined") {
       queryParts.push(`is_admin = $${paramIndex}`);
-      queryParams.push(isAdmin);
+      queryParams.push(is_admin);
+      paramIndex++;
     }
 
     const query = `UPDATE users SET ${queryParts.join(
@@ -122,9 +125,9 @@ class User {
     return await bcrypt.compare(password, hashedPassword);
   }
 
-  static generateToken(userId, username, isAdmin) {
+  static generateToken(userId, username, isAdmin, membership) {
     const token = jwt.sign(
-      { userId, username, isAdmin },
+      { userId, username, isAdmin, membership },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
