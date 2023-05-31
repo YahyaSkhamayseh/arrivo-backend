@@ -1,15 +1,16 @@
-const Payment = require('../models/Payment');
+const Payment = require("../models/Payment");
+const User = require("../models/User");
 const logger = require("../../utils/logger");
 
 const paymentController = {
   getAllPayments: async (req, res) => {
     try {
       const payments = await Payment.getAllPayments();
-      logger.info('Retrieved all payments');
+      logger.info("Retrieved all payments");
       res.json(payments);
     } catch (error) {
       logger.error(`Error retrieving payments: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: "Internal server error" });
     }
   },
 
@@ -24,19 +25,26 @@ const paymentController = {
         res.json(payment);
       } else {
         logger.info(`Payment with ID ${paymentId} not found`);
-        res.status(404).json({ error: 'Payment not found' });
+        res.status(404).json({ error: "Payment not found" });
       }
     } catch (error) {
       logger.error(`Error retrieving payment with ID ${paymentId}: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: "Internal server error" });
     }
   },
 
   createPayment: async (req, res) => {
     const paymentData = req.body;
+    const user = req.user;
 
     try {
+      // call payment service API, and upon success payment, we modify user membership to Premium.
+      await User.update(user.userId, {
+        membership: "Premium",
+      });
+
       const newPayment = await Payment.createPayment(paymentData);
+
       logger.info(`Created payment with ID: ${newPayment.payment_id}`);
       res.status(201).json(newPayment);
     } catch (error) {
@@ -50,13 +58,16 @@ const paymentController = {
     const paymentData = req.body;
 
     try {
-      const updatedPayment = await Payment.updatePayment(paymentId, paymentData);
+      const updatedPayment = await Payment.updatePayment(
+        paymentId,
+        paymentData
+      );
       if (updatedPayment) {
         logger.info(`Updated payment with ID: ${updatedPayment.payment_id}`);
         res.json(updatedPayment);
       } else {
         logger.info(`Payment with ID ${paymentId} not found`);
-        res.status(404).json({ error: 'Payment not found' });
+        res.status(404).json({ error: "Payment not found" });
       }
     } catch (error) {
       logger.error(`Error updating payment with ID ${paymentId}: ${error}`);
@@ -74,13 +85,13 @@ const paymentController = {
         res.json(deletedPayment);
       } else {
         logger.info(`Payment with ID ${paymentId} not found`);
-        res.status(404).json({ error: 'Payment not found' });
+        res.status(404).json({ error: "Payment not found" });
       }
     } catch (error) {
       logger.error(`Error deleting payment with ID ${paymentId}: ${error}`);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: "Internal server error" });
     }
-  }
+  },
 };
 
 module.exports = paymentController;
